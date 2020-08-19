@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">WearEngineCodeLab</string>
+
+    <!--MainActivity-->
+    <string name="peer_pkg_name">AppPackageName:</string>
+    <string name="dest_message">MessageContent  :</string>
+    <string name="get_device">getBoundDevices</string>
+    <string name="ping">pingApp</string>
+    <string name="send_message">sendMessage</string>
+    <string name="receive_message">receiveMessage</string>
+    <string name="send_file">sendFile</string>
+    <string name="cancel_receive_message">cancelReceiverMessage</string>
+    <string name="clear_log">clearPrint</string>
+    <string name="log_output">resultPrint:</string>
+    <string name="cancel_monitor_report">removeConnectionMonitor</string>
+    <string name="receive_monitor_report">addConnectionMonitor</string>
+    <string name="device_manager_description">Obtains the list of bound devices:</string>
+    <string name="p2p_manager_description">P2P communication and message management:</string>
+    <string name="monitor_manager_description">Registering or unregistering a listener for monitoring the connection status:</string>
+</resources>
