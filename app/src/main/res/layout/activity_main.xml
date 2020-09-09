@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_centerHorizontal="true"
-    android:layout_margin="@dimen/hi_wear_demo_margin_8dp"
     android:orientation="vertical"
+    android:background="@drawable/beijing1"
     tools:context=".WearEngineMainActivity">
 
     <TextView
@@ -23,50 +23,6 @@
         android:background="@android:drawable/edit_text"
         android:orientation="vertical">
     </RadioGroup>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="32dp"
-        android:layout_marginTop="@dimen/hi_wear_demo_margin_5dp"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="125dp"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="@dimen/hi_wear_demo_margin_5dp"
-            android:text="@string/peer_pkg_name" />
-
-        <EditText
-            android:id="@+id/peer_pkg_name_edit_text"
-            android:layout_width="256dp"
-            android:layout_height="match_parent"
-            android:background="@android:drawable/edit_text"
-            android:maxHeight="@dimen/hi_wear_demo_margin_30dp"
-            android:textSize="14sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="33dp"
-        android:layout_marginTop="@dimen/hi_wear_demo_margin_5dp"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="125dp"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="@dimen/hi_wear_demo_margin_5dp"
-            android:text="@string/dest_message" />
-
-        <EditText
-            android:id="@+id/message_edit_text"
-            android:layout_width="256dp"
-            android:layout_height="match_parent"
-            android:background="@android:drawable/edit_text"
-            android:maxHeight="@dimen/hi_wear_demo_margin_30dp"
-            android:textSize="14sp" />
-    </LinearLayout>
-
-
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -107,38 +63,21 @@
 
         <Button
             android:id="@+id/ping_device"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:onClick="pingBoundDevices"
-            android:textAllCaps="false"
-            android:text="@string/ping" />
+            android:text="@string/ping"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/send_message"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:onClick="sendMessageToDevice"
-            android:textAllCaps="false"
-            android:text="@string/send_message" />
-
-        <Button
-            android:id="@+id/send_file"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="selectFileAndSend"
-            android:textAllCaps="false"
-            android:text="@string/send_file" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:orientation="horizontal">
+            android:onClick="sendMessage"
+            android:text="@string/send_message"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/receive_message"
@@ -149,53 +88,25 @@
             android:text="@string/receive_message"
             android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/cancel_message"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="cancelReceiveMessage"
-            android:paddingEnd="@dimen/hi_wear_demo_margin_0dp"
-            android:paddingStart="@dimen/hi_wear_demo_margin_0dp"
-            android:text="@string/cancel_receive_message"
-            android:textAllCaps="false" />
+
 
     </LinearLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/hi_wear_demo_margin_0dp"
-        android:text="@string/monitor_manager_description" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/hi_wear_demo_margin_0dp"
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/get_monitor_event"
-            android:layout_width="wrap_content"
+            android:id="@+id/take_photo"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="registerEventStatus"
-            android:paddingEnd="@dimen/hi_wear_demo_margin_0dp"
-            android:paddingStart="@dimen/hi_wear_demo_margin_0dp"
-            android:text="@string/receive_monitor_report"
+            android:layout_weight="0.9"
+            android:onClick="takePhoto"
+            android:text="@string/take_photo"
             android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/cancel_monitor_event"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="unRegisterEventStatus"
-            android:paddingEnd="@dimen/hi_wear_demo_margin_0dp"
-            android:paddingStart="@dimen/hi_wear_demo_margin_0dp"
-            android:text="@string/cancel_monitor_report"
-            android:textAllCaps="false" />
     </LinearLayout>
 
     <LinearLayout

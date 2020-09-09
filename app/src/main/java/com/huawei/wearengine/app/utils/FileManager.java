@@ -5,8 +5,12 @@
 package com.huawei.wearengine.app.utils;
 
 import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -15,14 +19,24 @@ import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.core.os.EnvironmentCompat;
+
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 /**
  * File Manager
  *
  * @since 2020-08-05
  */
-public class SelectFileManager {
+public class FileManager {
     private static final String TAG = "SelectFileManager";
 
     private static final String FILE_DOCUMNET_ID_RAW = "raw:";
@@ -61,7 +75,7 @@ public class SelectFileManager {
 
     private static final int INDEX_TWO = 1;
 
-    private SelectFileManager() {
+    private FileManager() {
     }
 
     /**
@@ -305,5 +319,225 @@ public class SelectFileManager {
             }
         }
         return result;
+    }
+
+    /**
+     * 创建图片地址uri,用于保存拍照后的照片 Android 10以后使用这种方法
+     *
+     * @param context 应用上下文
+     * @return 图片的uri
+     */
+    public static Uri createImageUri(Context context) {
+        String status = Environment.getExternalStorageState();
+
+        // 判断是否有SD卡,优先使用SD卡存储,当没有SD卡时使用手机存储
+        if (status.equals(Environment.MEDIA_MOUNTED)) {
+            return context.getContentResolver()
+                .insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new ContentValues());
+        } else {
+            return context.getContentResolver()
+                .insert(MediaStore.Images.Media.INTERNAL_CONTENT_URI, new ContentValues());
+        }
+    }
+
+    /**
+     * 创建保存图片的文件
+     *
+     * @param context 应用上下文
+     * @return File 文件信息
+     * @throws IOException IO异常
+     */
+    public static File createImageFile(Context context) throws IOException {
+        String imageName = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (!storageDir.exists()) {
+            storageDir.mkdir();
+        }
+        File tempFile = new File(storageDir, imageName);
+        if (!Environment.MEDIA_MOUNTED.equals(EnvironmentCompat.getStorageState(tempFile))) {
+            return null;
+        }
+        return tempFile;
+    }
+
+    /**
+     * 获取压缩后的文件路径
+     *
+     * @param context 上下文
+     * @param fileUri 原始图片路径
+     * @return String 压缩后的文件路径
+     */
+    public static String getPathAfterCompressed(Context context, Uri fileUri) {
+        String savePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        File filePic = new File(savePath);
+        try {
+            if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                savePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+            } else {
+                savePath = context.getApplicationContext().getFilesDir().getAbsolutePath();
+            }
+            filePic = new File(savePath + "/Pictures/"
+                + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".bin");
+            Log.d(TAG, "image path is " + filePic);
+
+            if (!filePic.exists()) {
+                filePic.createNewFile();
+            }
+            Bitmap bitmap = getBitmapFormUri(context, fileUri);
+            saveBitMap(bitmap, context);
+            imgToBin(bitmap, filePic);
+        } catch (IOException e) {
+            Log.e(TAG, "Compressed Picture error", e);
+        }
+        return filePic.getAbsolutePath();
+    }
+
+    private static void saveBitMap(Bitmap bitmap, Context context) throws IOException {
+        String savePath;
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            savePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        } else {
+            savePath = context.getApplicationContext().getFilesDir().getAbsolutePath();
+        }
+
+        File filePic;
+        filePic = new File(savePath + "/Pictures/"
+            + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".jpeg");
+        if (!filePic.exists()) {
+            filePic.createNewFile();
+        }
+
+        try {
+            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePic));
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+            bos.flush();
+            bos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Log.i(TAG, "bmp path is " + filePic);
+    }
+
+    // 图片大小压缩
+    private static Bitmap getBitmapFormUri(Context context, Uri uri) throws FileNotFoundException, IOException {
+        BitmapFactory.Options onlyBoundsOptions = new BitmapFactory.Options();
+        onlyBoundsOptions.inJustDecodeBounds = true;
+        onlyBoundsOptions.inDither = true;
+        onlyBoundsOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        InputStream input = context.getContentResolver().openInputStream(uri);
+        Bitmap bitmap1 = BitmapFactory.decodeStream(input, null, onlyBoundsOptions);
+        input.close();
+        int originalWidth = onlyBoundsOptions.outWidth;
+        int originalHeight = onlyBoundsOptions.outHeight;
+        if ((originalWidth == -1) || (originalHeight == -1)) {
+            return null;
+        }
+        // 比例压缩
+        BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+        bitmapOptions.inSampleSize = 1; // 设置缩放比例
+        bitmapOptions.inDither = true;
+        bitmapOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        bitmapOptions.inJustDecodeBounds = false;
+        input = context.getContentResolver().openInputStream(uri);
+        Bitmap bitmap = BitmapFactory.decodeStream(input, null, bitmapOptions);
+        input.close();
+        return zoomBitmap(bitmap, 454, 454);
+    }
+
+    // 将图片文件转换为bin格式
+    private static void imgToBin(Bitmap bitmap, File file) {
+
+        try {
+            byte[] bytes = getPicturePixel(bitmap);
+            FileOutputStream out = new FileOutputStream(file);
+            out.write(bytes);
+            out.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static byte[] getPicturePixel(Bitmap bitmap) {
+
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        int pixelSize = 4;
+        int headSize = 8;
+
+        int colorMode = 1 << 8 + 0;
+        int widthBitOffset = 0;
+        int heightBitOffset = 16;
+        int header = (bitmap.getWidth() << widthBitOffset) + (bitmap.getHeight() << heightBitOffset);
+        // 所有的像素的数组，图片宽×高
+        int[] pixels = new int[width * height];
+        byte[] result = new byte[width * height * pixelSize + headSize];
+
+        int index = 0;
+
+        result[index++] = (byte)(colorMode & 0xFF);
+        result[index++] = (byte)((colorMode >> 8) & 0xFF);
+        result[index++] = (byte)((colorMode >> 16) & 0xFF);
+        result[index++] = (byte)((colorMode >> 24) & 0xFF);
+
+        result[index++] = (byte)(header & 0xFF);
+        result[index++] = (byte)((header >> 8) & 0xFF);
+        result[index++] = (byte)((header >> 16) & 0xFF);
+        result[index++] = (byte)((header >> 24) & 0xFF);
+
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+
+        for (int i = 0; i < pixels.length; i++) {
+            int clr = pixels[i];
+            int alpha = (clr & 0xff000000) >> 24;
+            int red = (clr & 0x00ff0000) >> 16;
+            int green = (clr & 0x0000ff00) >> 8;
+            int blue = clr & 0x000000ff;
+            // Log.d("tag", "r=" + red + ",g=" + green + ",b=" + blue);
+            result[index++] = (byte)blue;
+            result[index++] = (byte)green;
+            result[index++] = (byte)red;
+            result[index++] = (byte)alpha;
+        }
+        return result;
+    }
+
+    public static Bitmap zoomBitmap(Bitmap bitmap, float vw, float vh) {
+        float width = bitmap.getWidth();// 获得图片宽高
+        float height = bitmap.getHeight();
+        float resultWidth = 0;
+        float resultHeight = 0;
+        float scaleWidht, scaleHeight, xBegin, yBegin;// 图片缩放倍数以及x，y轴平移位置
+        Bitmap newbmp = null; // 新的图片
+        Matrix matrix = new Matrix();// 变换矩阵
+        if ((width / height) <= vw / vh) {
+            // 当宽高比大于所需要尺寸的宽高比时以宽的倍数为缩放倍数
+            scaleWidht = vw / width;
+            scaleHeight = scaleWidht;
+            // 获取bitmap源文件中y做表需要偏移的像数大小
+            yBegin = (height - width) / 2;
+            xBegin = 0;
+            resultWidth = width - xBegin;
+            resultHeight = height - 2 * yBegin;
+        } else {
+            scaleWidht = vh / height;
+            scaleHeight = scaleWidht;
+            // 获取bitmap源文件中x做表需要偏移的像数大小
+            xBegin = (width - height) / 2;
+            yBegin = 0;
+            resultWidth = width - 2 * xBegin;
+            resultHeight = height - yBegin;
+        }
+        matrix.postScale(scaleWidht / 1f, scaleHeight / 1f);
+        try {
+            if (width - xBegin > 0 && height - yBegin > 0 && bitmap != null)
+                // （原图，x轴起始位置，y轴起始位置，x轴结束位置，Y轴结束位置，缩放矩阵，是否过滤原图）为防止报错取绝对值
+                newbmp = Bitmap.createBitmap(bitmap, (int)Math.abs(xBegin), (int)Math.abs(yBegin),
+                    (int)Math.abs(resultWidth), (int)Math.abs(resultHeight), matrix, true);
+        } catch (Exception e) {
+            // 如果报错则返回原图，不至于为空白
+            e.printStackTrace();
+            return bitmap;
+        }
+        return newbmp;
     }
 }

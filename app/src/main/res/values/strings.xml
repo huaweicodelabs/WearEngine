@@ -6,10 +6,11 @@
     <string name="dest_message">MessageContent  :</string>
     <string name="get_device">getBoundDevices</string>
     <string name="ping">pingApp</string>
-    <string name="send_message">sendMessage</string>
-    <string name="receive_message">receiveMessage</string>
+    <string name="send_message">sendMsg</string>
+    <string name="receive_message">receiveMsg</string>
     <string name="send_file">sendFile</string>
-    <string name="cancel_receive_message">cancelReceiverMessage</string>
+    <string name="take_photo">Take Photos And Send</string>
+    <string name="cancel_receive_message">cancelReceiverMsg</string>
     <string name="clear_log">clearPrint</string>
     <string name="log_output">resultPrint:</string>
     <string name="cancel_monitor_report">removeConnectionMonitor</string>

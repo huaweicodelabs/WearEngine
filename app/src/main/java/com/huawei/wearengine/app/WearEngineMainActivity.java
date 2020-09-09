@@ -5,37 +5,31 @@
 package com.huawei.wearengine.app;
 
 import android.Manifest;
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextUtils;
-import android.text.TextWatcher;
+import android.provider.MediaStore;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
 
 import com.huawei.hmf.tasks.OnFailureListener;
 import com.huawei.hmf.tasks.OnSuccessListener;
 import com.huawei.wearengine.HiWear;
-import com.huawei.wearengine.app.utils.SelectFileManager;
+import com.huawei.wearengine.app.utils.FileManager;
 import com.huawei.wearengine.auth.AuthCallback;
 import com.huawei.wearengine.auth.Permission;
 import com.huawei.wearengine.device.Device;
 import com.huawei.wearengine.device.DeviceClient;
-import com.huawei.wearengine.monitor.MonitorClient;
-import com.huawei.wearengine.monitor.MonitorData;
-import com.huawei.wearengine.monitor.MonitorItem;
-import com.huawei.wearengine.monitor.MonitorListener;
 import com.huawei.wearengine.p2p.Message;
 import com.huawei.wearengine.p2p.P2pClient;
 import com.huawei.wearengine.p2p.PingCallback;
@@ -43,6 +37,7 @@ import com.huawei.wearengine.p2p.Receiver;
 import com.huawei.wearengine.p2p.SendCallback;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -70,27 +65,22 @@ public class WearEngineMainActivity extends AppCompatActivity {
 
     private static final String STRING_PING = " Ping ";
 
-    private static final String MONITOR_INT_DATA = "], int data[";
+    private static final String HASH_CODE = " , hashcode is: ";
 
-    private static final String MONITOR_BOOLEAN_DATA = "], boolean data[";
+    private static final String PEER_PKG_NAME = "com.watch.wearengine";
 
-    private static final String[] PERMISSIONS_STORAGE = {Manifest.permission.READ_EXTERNAL_STORAGE};
+    private static final String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
 
-    private static final int SELECT_FILE_CODE = 1;
+    private static final int TAKE_PHOTO = 2;
 
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static final int SCROLL_HIGH = 50;
 
     private RadioGroup devicesRadioGroup;
 
-    private EditText messageEditText;
-
     private TextView logOutputTextView;
 
-    private EditText peerPkgNameEditText;
-
     private P2pClient p2pClient;
-
-    private MonitorClient monitorClient;
 
     private DeviceClient deviceClient;
 
@@ -104,34 +94,24 @@ public class WearEngineMainActivity extends AppCompatActivity {
 
     private int index = 0;
 
-    private String peerPkgName;
+    // 申请相机、存储权限的requestCode
+    private static final int PERMISSION_CAMERA_STORAGE_CODE = 0x00000012;
 
-    private MonitorItem monitorItemType = MonitorItem.MONITOR_ITEM_CONNECTION;
+    /**
+     * 是否是Android 10以上手机
+     */
+    private boolean isAndroidQ = Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q;
 
-    private Receiver receiver = new Receiver() {
-        @Override
-        public void onReceiveMessage(Message message) {
-            if (message != null) {
-                String data = new String(message.getData());
-                printOperationResult("ReceiveMessage is:" + data);
-            } else {
-                printOperationResult("Receiver Message is null");
-            }
-        }
-    };
+    /**
+     * 用于保存拍照图片的uri
+     */
+    private Uri mCameraUri;
 
-    private MonitorListener monitorListener = new MonitorListener() {
-        @Override
-        public void onChanged(int resultCode, MonitorItem monitorItem, MonitorData monitorData) {
-            if (monitorData != null && monitorItem != null) {
-                printOperationResult(
-                    "MonitorListener result is: resultCode:" + resultCode + "string data[" + monitorData.asString()
-                        + MONITOR_INT_DATA + monitorData.asInt() + MONITOR_BOOLEAN_DATA + monitorData.asBool() + " ]");
-            } else {
-                printOperationResult("monitorItem is null or monitorData is null!");
-            }
-        }
-    };
+    /**
+     * 用于保存图片的文件路径，Android 10以下使用图片路径访问图片
+     */
+    private String mCameraImagePath;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,8 +119,20 @@ public class WearEngineMainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initView();
         initData();
+        checkPermissionStorageAndCamera();
         addViewListener();
-        verifyStoragePermissions();
+    }
+
+    /**
+     * Applying for the Read Permission on External Storage
+     */
+    private void checkPermissionStorageAndCamera() {
+        int permissionStorage = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        int permissionCamera = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        if (permissionStorage != PackageManager.PERMISSION_GRANTED
+                || permissionCamera != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_CAMERA_STORAGE_CODE);
+        }
     }
 
     /**
@@ -148,36 +140,7 @@ public class WearEngineMainActivity extends AppCompatActivity {
      */
     private void initData() {
 
-
     }
-
-    /**
-     * Set the name of the device-side application package specified by the third-party application for communication.
-     *
-     */
-    private void setPeerPkgName(Editable editable) {
-
-
-    }
-
-    /**
-     * send message to device
-     */
-    private void sendMessage(){
-
-
-    }
-
-    /**
-     * Applying for the Read Permission on External Storage
-     */
-    private void verifyStoragePermissions() {
-        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, PERMISSIONS_STORAGE, REQUEST_EXTERNAL_STORAGE);
-        }
-    }
-
 
     /**
      * Initialization view
@@ -185,8 +148,6 @@ public class WearEngineMainActivity extends AppCompatActivity {
     private void initView() {
         devicesRadioGroup = findViewById(R.id.device_radio_group);
         logOutputTextView = findViewById(R.id.log_output_text_view);
-        messageEditText = findViewById(R.id.message_edit_text);
-        peerPkgNameEditText = findViewById(R.id.peer_pkg_name_edit_text);
     }
 
     /**
@@ -199,25 +160,6 @@ public class WearEngineMainActivity extends AppCompatActivity {
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 Log.d(TAG, "onCheckedChanged:" + checkedId);
                 selectedDevice = deviceList.get(checkedId);
-            }
-        });
-        peerPkgNameEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                if (editable == null) {
-                    Log.e(TAG, "peerPkgNameEditText After message text changed editable is null");
-                    return;
-                }
-                Log.d(TAG, "After package text changed" + editable);
-                setPeerPkgName(editable);
             }
         });
     }
@@ -252,24 +194,24 @@ public class WearEngineMainActivity extends AppCompatActivity {
      * @param view UI object
      */
     public void pingBoundDevices(View view) {
-        if (!checkDevice() || !checkPackageName()) {
+        if (!checkSelectedDevice()) {
             return;
         }
         p2pClient.ping(selectedDevice, new PingCallback() {
             @Override
             public void onPingResult(int result) {
                 printOperationResult(Calendar.getInstance().getTime() + STRING_PING + selectedDevice.getName()
-                    + DEVICE_NAME_OF + peerPkgName + STRING_RESULT + result);
+                        + DEVICE_NAME_OF + PEER_PKG_NAME + STRING_RESULT + result);
             }
         }).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void result) {
-                printOperationResult(STRING_PING + selectedDevice.getName() + DEVICE_NAME_OF + peerPkgName + SUCCESS);
+                printOperationResult(STRING_PING + selectedDevice.getName() + DEVICE_NAME_OF + PEER_PKG_NAME + SUCCESS);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(Exception e) {
-                printOperationResult(STRING_PING + selectedDevice.getName() + DEVICE_NAME_OF + peerPkgName + FAILURE);
+                printOperationResult(STRING_PING + selectedDevice.getName() + DEVICE_NAME_OF + PEER_PKG_NAME + FAILURE);
             }
         });
     }
@@ -279,47 +221,9 @@ public class WearEngineMainActivity extends AppCompatActivity {
      *
      * @param view UI object
      */
-    public void sendMessageToDevice(View view) {
-        if (!checkDevice() || !checkPackageName()) {
-            return;
-        }
-
-        // Build the request param message
-        String sendMessageStr = messageEditText.getText().toString();
-        if (sendMessageStr.length() > 0) {
-            Message.Builder builder = new Message.Builder();
-            try {
-                builder.setPayload(sendMessageStr.getBytes("UTF-8"));
-            } catch (UnsupportedEncodingException e) {
-                Log.e(TAG, "set sendMessageStr UnsupportedEncodingException");
-            }
-            sendMessage = builder.build();
-        }
-        if (sendMessage == null || sendMessage.getData().length == 0) {
-            printOperationResult("please input message for send!");
-            return;
-        }
-
-        sendMessage();
-    }
-
-    /**
-     * select file to send device
-     *
-     * @param view UI object
-     */
-    public void selectFileAndSend(View view) {
-        if (!checkDevice() || !checkPackageName()) {
-            return;
-        }
-        try {
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("*/*");
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            startActivityForResult(intent, SELECT_FILE_CODE);
-        } catch (ActivityNotFoundException e) {
-            logOutputTextView.append("ActivityNotFoundException" + System.lineSeparator());
-        }
+    public void sendMessage(View view) {
+        String sendMessageStr = "Hello Watch! This is HuaWei Phone.";
+        sendMessageResult(sendMessageStr);
     }
 
     /**
@@ -328,61 +232,16 @@ public class WearEngineMainActivity extends AppCompatActivity {
      * @param sendFilePath file path
      */
     public void sendFile(String sendFilePath) {
-        if (TextUtils.isEmpty(sendFilePath)) {
-            printOperationResult("selectFilePath is invalid");
-            return;
-        }
-        printOperationResult("selectFilePath is:" + sendFilePath);
-        File sendFile = new File(sendFilePath);
-        if (!sendFile.exists()) {
-            printOperationResult("file is not exist");
-            return;
-        }
-        Message.Builder builder = new Message.Builder();
-        builder.setPayload(sendFile);
-        Message fileMessage = builder.build();
-        if (fileMessage == null) {
-            printOperationResult("fileMessage is null");
-            return;
-        }
-        p2pClient.send(selectedDevice, fileMessage, new SendCallback() {
-            @Override
-            public void onSendResult(int resultCode) {
-                printOperationResult(Calendar.getInstance().getTime() + SEND_MESSAGE_TO + selectedDevice.getName()
-                    + DEVICE_NAME_OF + peerPkgName + STRING_RESULT + resultCode);
-            }
 
-            @Override
-            public void onSendProgress(long progress) {
-                printOperationResult(Calendar.getInstance().getTime() + SEND_MESSAGE_TO + selectedDevice.getName()
-                    + DEVICE_NAME_OF + peerPkgName + " progress:" + progress);
-            }
-        }).addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void succussVoid) {
-                printOperationResult(
-                    SEND_MESSAGE_TO + selectedDevice.getName() + DEVICE_NAME_OF + peerPkgName + SUCCESS);
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(Exception e) {
-                printOperationResult(
-                    SEND_MESSAGE_TO + selectedDevice.getName() + DEVICE_NAME_OF + peerPkgName + FAILURE);
-            }
-        });
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == SELECT_FILE_CODE && resultCode == RESULT_OK) {
-            if (data == null) {
-                Log.e(TAG, "Invalid file data");
-                return;
-            }
-            Uri selectFileUri = data.getData();
-            String selectFilePath = SelectFileManager.getFilePath(this, selectFileUri);
-            sendFile(selectFilePath);
+        if (requestCode == TAKE_PHOTO && resultCode == RESULT_OK) {
+            String compressedFilePath = FileManager.getPathAfterCompressed(this, mCameraUri);
+            printOperationResult("take photo success，getPathAfterCompressed file path is " + compressedFilePath);
+            sendFile(compressedFilePath);
         }
     }
 
@@ -392,12 +251,23 @@ public class WearEngineMainActivity extends AppCompatActivity {
      * @param view UI object
      */
     public void receiveMessage(View view) {
-        if (!checkDevice() || !checkPackageName()) {
+        if (!checkSelectedDevice()) {
             return;
         }
+        Receiver receiver = new Receiver() {
+            @Override
+            public void onReceiveMessage(Message message) {
+                if (message != null) {
+                    String data = new String(message.getData());
+                    printOperationResult("ReceiveMessage is:" + data);
+                } else {
+                    printOperationResult("Receiver Message is null");
+                }
+            }
+        };
         int receiverPid = android.os.Process.myPid();
         int receiverHashCode = System.identityHashCode(receiver);
-        Log.d(TAG, "receiveMessageButtonOnClick receiver pid is:" + receiverPid + ", hashcode is:" + receiverHashCode);
+        Log.d(TAG, "receiveMessageButtonOnClick receiver pid is:" + receiverPid + HASH_CODE + receiverHashCode);
         p2pClient.registerReceiver(selectedDevice, receiver).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void avoid) {
@@ -411,82 +281,49 @@ public class WearEngineMainActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * unregister message listener for message from device
-     *
-     * @param view UI object
-     */
-    public void cancelReceiveMessage(View view) {
-        int receiverPid = android.os.Process.myPid();
-        int receiverHashCode = System.identityHashCode(receiver);
-        Log.d(TAG, "cancelReceiveMessage receiver pid is:" + receiverPid + ", hashcode is:" + receiverHashCode);
-        p2pClient.unregisterReceiver(receiver).addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void succussVoid) {
-                printOperationResult("cancel receive message" + SUCCESS);
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(Exception e) {
-                printOperationResult("cancel receive message" + FAILURE);
-            }
-        });
-    }
 
-    /**
-     * register status listener for connectionStatus
-     *
-     * @param view UI object
-     */
-    public void registerEventStatus(View view) {
-        if (!checkDevice()) {
+    private void sendMessageResult(String message) {
+        if (!checkSelectedDevice()) {
             return;
         }
-        monitorListener = new MonitorListener() {
+        if (message.length() > 0) {
+            Message.Builder builder = new Message.Builder();
+            try {
+                builder.setPayload(message.getBytes("UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                Log.e(TAG, "set sendMessageStr UnsupportedEncodingException");
+            }
+            sendMessage = builder.build();
+        }
+        if (sendMessage == null || sendMessage.getData().length == 0) {
+            printOperationResult("please input message for send!");
+            return;
+        }
+
+        SendCallback sendCallback = new SendCallback() {
             @Override
-            public void onChanged(int errorCode, MonitorItem monitorItem, MonitorData monitorData) {
-                String result = "ReceiveMonitorMessage is: string data[" + monitorData.asString() + MONITOR_INT_DATA
-                    + monitorData.asInt() + MONITOR_BOOLEAN_DATA + monitorData.asBool() + "]";
-                printOperationResult(result);
+            public void onSendResult(int resultCode) {
+                printOperationResult(Calendar.getInstance().getTime() + SEND_MESSAGE_TO + selectedDevice.getName()
+                        + DEVICE_NAME_OF + PEER_PKG_NAME + STRING_RESULT + resultCode);
+            }
+
+            @Override
+            public void onSendProgress(long progress) {
+                printOperationResult(Calendar.getInstance().getTime() + SEND_MESSAGE_TO + selectedDevice.getName()
+                        + DEVICE_NAME_OF + PEER_PKG_NAME + " progress:" + progress);
             }
         };
-
-        int receiverPid = android.os.Process.myPid();
-        int receiverHashCode = System.identityHashCode(monitorListener);
-        Log.d(TAG, "registerEventStatus receiver pid is:" + receiverPid + ", hashcode is:" + receiverHashCode);
-        monitorClient.register(selectedDevice, monitorItemType, monitorListener)
-            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void avoid) {
-                    printOperationResult("register status event listener " + SUCCESS);
-                }
-            })
-            .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(Exception e) {
-                    printOperationResult("register status event listener " + FAILURE);
-                }
-            });
-    }
-
-    /**
-     * unregister status listener for connectionStatus
-     *
-     * @param view UI object
-     */
-    public void unRegisterEventStatus(View view) {
-        int receiverPid = android.os.Process.myPid();
-        int receiverHashCode = System.identityHashCode(monitorListener);
-        Log.d(TAG, "cancelReceiveMessage receiver pid is:" + receiverPid + ", hashcode is:" + receiverHashCode);
-        monitorClient.unregister(monitorListener).addOnSuccessListener(new OnSuccessListener<Void>() {
+        p2pClient.send(selectedDevice, sendMessage, sendCallback).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
-            public void onSuccess(Void avoid) {
-                printOperationResult("cancel register status event listener " + SUCCESS);
+            public void onSuccess(Void result) {
+                printOperationResult(
+                        SEND_MESSAGE_TO + selectedDevice.getName() + DEVICE_NAME_OF + PEER_PKG_NAME + SUCCESS);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(Exception e) {
-                printOperationResult("cancel register status event listener " + FAILURE);
+                printOperationResult(
+                        SEND_MESSAGE_TO + selectedDevice.getName() + DEVICE_NAME_OF + PEER_PKG_NAME + FAILURE);
             }
         });
     }
@@ -511,35 +348,10 @@ public class WearEngineMainActivity extends AppCompatActivity {
         logOutputTextView.append(string + System.lineSeparator());
         int offset = logOutputTextView.getLineCount() * logOutputTextView.getLineHeight();
         if (offset > logOutputTextView.getHeight()) {
-            logOutputTextView.scrollTo(0, offset - logOutputTextView.getHeight());
+            logOutputTextView.scrollTo(0, offset - logOutputTextView.getHeight() + SCROLL_HIGH);
         }
     }
 
-    /**
-     * check selected device
-     *
-     * @return true/false
-     */
-    private boolean checkDevice() {
-        if (selectedDevice == null) {
-            printOperationResult("please select a target device!");
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * check input target app packageName
-     *
-     * @return true/false
-     */
-    private boolean checkPackageName() {
-        if (TextUtils.isEmpty(peerPkgName)) {
-            printOperationResult("please input target app packageName!");
-            return false;
-        }
-        return true;
-    }
 
     /**
      * update device list for devicesRadioGroup
@@ -569,5 +381,57 @@ public class WearEngineMainActivity extends AppCompatActivity {
         radioButton.setChecked(false);
         radioButton.setId(id);
         radioButton.setText(text);
+    }
+
+    private boolean checkSelectedDevice() {
+        if (selectedDevice == null) {
+            printOperationResult("please select the target device!");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * use camera to take photo
+     *
+     * @param view UI object
+     */
+    public void takePhoto(View view) {
+        if (!checkSelectedDevice()) {
+            return;
+        }
+        Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // 判断是否有相机
+        if (captureIntent.resolveActivity(getPackageManager()) != null) {
+            File photoFile = null;
+            Uri photoUri = null;
+            if (isAndroidQ) {
+                // 适配android 10
+                photoUri = FileManager.createImageUri(this);
+                Log.e(TAG, "camera come here0");
+            } else {
+                try {
+                    photoFile = FileManager.createImageFile(this);
+                    Log.e(TAG, "camera come here1");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (photoFile != null) {
+                    mCameraImagePath = photoFile.getAbsolutePath();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        // 适配Android 7.0文件权限，通过FileProvider创建一个content类型的Uri
+                        photoUri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", photoFile);
+                    } else {
+                        photoUri = Uri.fromFile(photoFile);
+                    }
+                }
+            }
+            mCameraUri = photoUri;
+            if (photoUri != null) {
+                captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                captureIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                startActivityForResult(captureIntent, TAKE_PHOTO);
+            }
+        }
     }
 }
