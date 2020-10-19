@@ -94,22 +94,19 @@ public class WearEngineMainActivity extends AppCompatActivity {
 
     private int index = 0;
 
-    // 申请相机、存储权限的requestCode
+    //Request code for camera and storage permission
     private static final int PERMISSION_CAMERA_STORAGE_CODE = 0x00000012;
 
     /**
-     * 是否是Android 10以上手机
+     * If it Android 10 or later
      */
     private boolean isAndroidQ = Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q;
 
     /**
-     * 用于保存拍照图片的uri
+     * The uri used to save the photo taken
      */
     private Uri mCameraUri;
-
-    /**
-     * 用于保存图片的文件路径，Android 10以下使用图片路径访问图片
-     */
+	
     private String mCameraImagePath;
 
 
@@ -401,12 +398,10 @@ public class WearEngineMainActivity extends AppCompatActivity {
             return;
         }
         Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        // 判断是否有相机
         if (captureIntent.resolveActivity(getPackageManager()) != null) {
             File photoFile = null;
             Uri photoUri = null;
             if (isAndroidQ) {
-                // 适配android 10
                 photoUri = FileManager.createImageUri(this);
                 Log.e(TAG, "camera come here0");
             } else {
@@ -419,7 +414,6 @@ public class WearEngineMainActivity extends AppCompatActivity {
                 if (photoFile != null) {
                     mCameraImagePath = photoFile.getAbsolutePath();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        // 适配Android 7.0文件权限，通过FileProvider创建一个content类型的Uri
                         photoUri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", photoFile);
                     } else {
                         photoUri = Uri.fromFile(photoFile);

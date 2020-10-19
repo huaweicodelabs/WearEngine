@@ -79,11 +79,11 @@ public class FileManager {
     }
 
     /**
-     * 从文件数据库中查询获取真正的文件路径
+     * Query the real file path from the database
      *
-     * @param context context上下文
-     * @param contentUri 文件Uri地址
-     * @return 返回文件的路径
+     * @param context context
+     * @param contentUri Uri address of the file 
+     * @return Return the file path
      */
     public static String getFilePath(Context context, Uri contentUri) {
         String selectFilePath = null;
@@ -99,11 +99,11 @@ public class FileManager {
     }
 
     /**
-     * 获取文件路径
+     * Get the file path 
      *
-     * @param context context上下文
-     * @param contentUri 文件Uri地址
-     * @return 返回文件的路径
+     * @param context context
+     * @param contentUri Uri address of the file
+     * @return Return the file path
      */
     private static String getRealPathFromUri(Context context, Uri contentUri) {
         String result = null;
@@ -131,11 +131,11 @@ public class FileManager {
     }
 
     /**
-     * 获取文件路径为content://开头时文件路径
+     * File path: content://File path at the beginning
      *
-     * @param context context上下文
-     * @param uri 文件Uri地址
-     * @return 返回文件路径
+     * @param context context
+     * @param uri Uri address of the file
+     * @return Return the file path
      */
     private static String getContentPath(Context context, Uri uri) {
         String result = null;
@@ -159,11 +159,11 @@ public class FileManager {
     }
 
     /**
-     * 处理Document的Uri
+     * Process Document Uri
      *
-     * @param context context上下文
-     * @param uri 文件Uri地址
-     * @return 返回文件路径
+     * @param context context
+     * @param uri Uri address of the file
+     * @return Return the file path
      */
     private static String dealDocument(Context context, Uri uri) {
         String result = null;
@@ -196,11 +196,11 @@ public class FileManager {
     }
 
     /**
-     * 根据Document的id返回文件路径
+     * Return file path according to Document id 
      *
-     * @param context context上下文
-     * @param documentId 文件documentId
-     * @return 返回文件路径
+     * @param context context
+     * @param documentId documentId of the file
+     * @return Return the file path
      */
     private static String dealWithDocumentId(Context context, String documentId) {
         String[] splits = documentId.split(FILE_SPLIT);
@@ -219,40 +219,40 @@ public class FileManager {
     }
 
     /**
-     * 确定所选的文件类型
+     * Confirm the selected file type
      *
-     * @param uri 文件Uri地址
-     * @return 文件是否为ExternalStorageDocument类型
+     * @param uri Uri address of the file 
+     * @return if the file is ExternalStorageDocument type
      */
     private static boolean isExternalStorage(Uri uri) {
         return FILE_TYPE_STORAGE.equals(uri.getAuthority());
     }
 
     /**
-     * 确定所选的文件类型
+     * Confirm the selected file type
      *
-     * @param uri 文件Uri地址
-     * @return 文件是否为Download类型
+     * @param uri Uri address of the file 
+     * @return if the file is Download type
      */
     private static boolean isDownloads(Uri uri) {
         return FILE_TYPE_DOWNLOAD.equals(uri.getAuthority());
     }
 
     /**
-     * 确定所选的文件类型
+     * Confirm the selected file type
      *
-     * @param uri 文件Uri地址
-     * @return 文件是否为Media类型
+     * @param uri Uri address of the file
+     * @return if the file is Media type
      */
     private static boolean isMedia(Uri uri) {
         return FILE_TYPE_MEDIA.equals(uri.getAuthority());
     }
 
     /**
-     * 获取文件类型所对应的Uri
+     * Get the corresponding Uri to the file type
      *
-     * @param type 文件类型
-     * @return 文件类型所对应的Uri
+     * @param type File type
+     * @return Return the corresponding Uri to the file type
      */
     private static Uri getContentUri(String type) {
         Uri contentUri = null;
@@ -269,10 +269,10 @@ public class FileManager {
     }
 
     /**
-     * 根据uri获取获取外部存储路径
+     * Get external storage path according to uri
      *
-     * @param uri 文件Uri地址
-     * @return 文件获取外部存储路径
+     * @param uri Uri address of the file 
+     * @return The file gets external storage path
      */
     private static String getExternalStorage(Uri uri) {
         String documentId = DocumentsContract.getDocumentId(uri);
@@ -288,13 +288,13 @@ public class FileManager {
     }
 
     /**
-     * 获取此Uri的data列的值。
+     * Get value of the Uri data
      *
-     * @param context context上下文
-     * @param uri 要查询的Uri
-     * @param selection 查询中使用的过滤器
-     * @param selectionArgs 查询中使用的选择参数
-     * @return 返回文件路径
+     * @param context context
+     * @param uri the Uri needs query
+     * @param selection The filter used in the query
+     * @param selectionArgs The selected parameter used in the query
+     * @return Return the file path
      */
     private static String getColumn(Context context, Uri uri, String selection, String[] selectionArgs) {
         Cursor cursor = null;
@@ -322,15 +322,15 @@ public class FileManager {
     }
 
     /**
-     * 创建图片地址uri,用于保存拍照后的照片 Android 10以后使用这种方法
+     * Create uri of image address to save photos after shooting in Android 10 or later 
      *
-     * @param context 应用上下文
-     * @return 图片的uri
+     * @param context context
+     * @return Image uri
      */
     public static Uri createImageUri(Context context) {
         String status = Environment.getExternalStorageState();
 
-        // 判断是否有SD卡,优先使用SD卡存储,当没有SD卡时使用手机存储
+        // If there is an SD card, SD card will be precedently used; otherwise phone storage will be used.
         if (status.equals(Environment.MEDIA_MOUNTED)) {
             return context.getContentResolver()
                 .insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new ContentValues());
@@ -341,11 +341,11 @@ public class FileManager {
     }
 
     /**
-     * 创建保存图片的文件
+     * Create file of saving images
      *
-     * @param context 应用上下文
-     * @return File 文件信息
-     * @throws IOException IO异常
+     * @param context Context
+     * @return File File information
+     * @throws IOException IO exception
      */
     public static File createImageFile(Context context) throws IOException {
         String imageName = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
@@ -361,11 +361,11 @@ public class FileManager {
     }
 
     /**
-     * 获取压缩后的文件路径
+     * Get the path of the compressed file
      *
-     * @param context 上下文
-     * @param fileUri 原始图片路径
-     * @return String 压缩后的文件路径
+     * @param context Context
+     * @param fileUri Original image path
+     * @return String File path of the compressed file
      */
     public static String getPathAfterCompressed(Context context, Uri fileUri) {
         String savePath = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -418,7 +418,7 @@ public class FileManager {
         Log.i(TAG, "bmp path is " + filePic);
     }
 
-    // 图片大小压缩
+    // Compress image size
     private static Bitmap getBitmapFormUri(Context context, Uri uri) throws FileNotFoundException, IOException {
         BitmapFactory.Options onlyBoundsOptions = new BitmapFactory.Options();
         onlyBoundsOptions.inJustDecodeBounds = true;
@@ -432,9 +432,9 @@ public class FileManager {
         if ((originalWidth == -1) || (originalHeight == -1)) {
             return null;
         }
-        // 比例压缩
+        // Proportional compression
         BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
-        bitmapOptions.inSampleSize = 1; // 设置缩放比例
+        bitmapOptions.inSampleSize = 1; 
         bitmapOptions.inDither = true;
         bitmapOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;
         bitmapOptions.inJustDecodeBounds = false;
@@ -444,7 +444,7 @@ public class FileManager {
         return zoomBitmap(bitmap, 454, 454);
     }
 
-    // 将图片文件转换为bin格式
+    // Transfer the image file into bin format
     private static void imgToBin(Bitmap bitmap, File file) {
 
         try {
@@ -468,7 +468,7 @@ public class FileManager {
         int widthBitOffset = 0;
         int heightBitOffset = 16;
         int header = (bitmap.getWidth() << widthBitOffset) + (bitmap.getHeight() << heightBitOffset);
-        // 所有的像素的数组，图片宽×高
+        // The arrays of all the pixels, weight by height of image
         int[] pixels = new int[width * height];
         byte[] result = new byte[width * height * pixelSize + headSize];
 
@@ -502,18 +502,18 @@ public class FileManager {
     }
 
     public static Bitmap zoomBitmap(Bitmap bitmap, float vw, float vh) {
-        float width = bitmap.getWidth();// 获得图片宽高
+        float width = bitmap.getWidth();// Get width and height of the image
         float height = bitmap.getHeight();
         float resultWidth = 0;
         float resultHeight = 0;
-        float scaleWidht, scaleHeight, xBegin, yBegin;// 图片缩放倍数以及x，y轴平移位置
-        Bitmap newbmp = null; // 新的图片
-        Matrix matrix = new Matrix();// 变换矩阵
+        float scaleWidht, scaleHeight, xBegin, yBegin;// Zoom ratio and X, Y axis translation position
+        Bitmap newbmp = null; // New images
+        Matrix matrix = new Matrix();// Transform matrix
         if ((width / height) <= vw / vh) {
-            // 当宽高比大于所需要尺寸的宽高比时以宽的倍数为缩放倍数
+            // When the aspect ratio is greater than the requirement, the multiple of the width is taken as the zoom factor
             scaleWidht = vw / width;
             scaleHeight = scaleWidht;
-            // 获取bitmap源文件中y做表需要偏移的像数大小
+            // To get Y coordinate in the bitmap source file,it needs the translation pixels
             yBegin = (height - width) / 2;
             xBegin = 0;
             resultWidth = width - xBegin;
@@ -521,7 +521,7 @@ public class FileManager {
         } else {
             scaleWidht = vh / height;
             scaleHeight = scaleWidht;
-            // 获取bitmap源文件中x做表需要偏移的像数大小
+            // To get Y coordinate in the bitmap source file,it needs the translation pixels
             xBegin = (width - height) / 2;
             yBegin = 0;
             resultWidth = width - 2 * xBegin;
@@ -530,11 +530,11 @@ public class FileManager {
         matrix.postScale(scaleWidht / 1f, scaleHeight / 1f);
         try {
             if (width - xBegin > 0 && height - yBegin > 0 && bitmap != null)
-                // （原图，x轴起始位置，y轴起始位置，x轴结束位置，Y轴结束位置，缩放矩阵，是否过滤原图）为防止报错取绝对值
+                // （Original image, X-axis start position, Y-axis start-up position, X-axis end position, Y-axis end position, zoom matrix, whether to filter the original image)Take absolute value to prevent error reporting
                 newbmp = Bitmap.createBitmap(bitmap, (int)Math.abs(xBegin), (int)Math.abs(yBegin),
                     (int)Math.abs(resultWidth), (int)Math.abs(resultHeight), matrix, true);
         } catch (Exception e) {
-            // 如果报错则返回原图，不至于为空白
+            // If an error is reported, it will return to the original image, not blank
             e.printStackTrace();
             return bitmap;
         }

@@ -1,4 +1,4 @@
-# Wear Engine Demo
+﻿# Wear Engine Demo
 
 ## Table of Contents
 
@@ -36,7 +36,8 @@ Before using Wear Engine demo code, check whether the IDE environment has been i
 3. Press Sync Project with Gradle Files to ensure the development environment builds completed.
 
 For more development details, please refer to the following link:
-https://developer.huawei.com/consumer/cn/codelab/WearEngine/index.html#0   
+https://developer.huawei.com/consumer/cn/codelab/WearEngine/index.html (CN)
+https://developer.huawei.com/consumer/en/codelab/WearEngine/index.html (EN)
 
 
 ## Supported Environments
@@ -46,3 +47,4 @@ https://developer.huawei.com/consumer/cn/codelab/WearEngine/index.html#0
 	
 ## License
    Wear Engine demo is licensed under the [Apache License, version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+
